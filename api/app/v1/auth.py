@@ -2,15 +2,19 @@ from flask import Blueprint, jsonify, request, make_response
 from flask_jwt_extended import create_access_token, set_access_cookies, unset_jwt_cookies, jwt_required, get_jwt_identity
 from flask_bcrypt import Bcrypt
 from flask_cors import cross_origin
+from front_txt_extraction.gemini_ocr_v2 import FrontIDExtractor
+
 
 from app.models.users import User
 from app.models.tokens import Token
 from app.extensions import db
 
 from app.utils.EmailRouter import EmailRouter
+from app.utils.FaceRecognition import FaceVerifier
 
 import uuid
 import os
+import json
 
 auth_bp = Blueprint('auth_bp', __name__, url_prefix='/api/v1/auth')
 
@@ -119,8 +123,24 @@ def verify_identity():
     if not os.path.exists(os.environ.get('UPLOAD_FOLDER')):
         os.makedirs(os.environ.get('UPLOAD_FOLDER'))
 
+    identity_card_photo_uri = os.environ.get('UPLOAD_FOLDER') + f'/{user_id}-photo.{identity_card_photo.filename.split(".")[-1]}'
+    identity_card_video_uri = os.environ.get('UPLOAD_FOLDER') + f'/{user_id}-video.{identity_card_video.filename.split(".")[-1]}'
+
     identity_card_photo.save(os.path.join(os.environ.get('UPLOAD_FOLDER'), f'{user_id}-photo.{identity_card_photo.filename.split(".")[-1]}'))
     identity_card_video.save(os.path.join(os.environ.get('UPLOAD_FOLDER'), f'{user_id}-video.{identity_card_video.filename.split(".")[-1]}'))
-
-    return make_response(jsonify({'message': 'Identity verified successfully'}), 200)
-    ## The logic of the video to be verified
+    front_id_extractor = FrontIDExtractor()
+    # Extracted data of the ID
+    
+    extracted_data = front_id_extractor.run(identity_card_photo_uri)[0]
+    print(extracted_data)
+    
+    
+    # Verify the video matching with the photo
+    face_reco = FaceVerifier(identity_card_photo_uri)
+    recogntion_result = face_reco.verify_video(identity_card_video_uri)
+    if not recogntion_result:
+        return make_response(jsonify({'error': 'Identity verification failed'}), 400)
+    
+    user.identity_verified = True
+    db.session.commit()
+    return make_response(jsonify({**extracted_data}), 200)
