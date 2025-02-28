@@ -1,15 +1,35 @@
 'use client';
 import React, { useState } from 'react';
-
 const LoginPage: React.FC = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [error, setError] = useState('');
 
     const handleLogin = (event: React.FormEvent) => {
         event.preventDefault();
-        // Add login logic here
-        console.log('Email:', email);
-        console.log('Password:', password);
+        if (!password || !email) {
+            setError('Please fill in all fields');
+            return;
+        }
+        fetch('http://localhost:5000/api/v1/auth/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ email, password })
+        }).then(async (res) => {
+            const token = await res.json();
+            if (!res.ok) {
+                setError(token.error);
+                return;
+            }
+            console.log(token.access_token_cookie);
+            localStorage.setItem('access_token', token.access_token_cookie);
+            window.location.href = '/profile';
+        }).catch((err) => {
+            console.error(err);
+        })
+        
     };
 
     return (
@@ -54,6 +74,7 @@ const LoginPage: React.FC = () => {
             duration-100 ease-in-out'
             onClick={() => window.location.href = '/signup'}>Sign Up</button>
         </div>
+        {error && <p className='text-red-500 mt-5'>{error}</p>}
         </div>
     );
 };

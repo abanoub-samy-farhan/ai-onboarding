@@ -1,13 +1,11 @@
 import smtplib
 from email.mime.text import MIMEText
-
-from app.models.tokens import Token
-from app.models.users import User
-
 from email.mime.multipart import MIMEMultipart
 from dotenv import load_dotenv
 import pyotp
 import os
+
+from app.models.users import User
 
 load_dotenv()
 
@@ -16,21 +14,20 @@ class EmailRouter:
         if not recipient:
             raise ValueError("Recipient is required")
         self.host = os.environ.get("EMAIL_HOST")
-        self.port = os.environ.get("EMAIL_PORT")
+        self.port = int(os.environ.get("EMAIL_PORT", 587))  # Ensure port is an integer, default to 587 if missing
         self.sender = os.environ.get("EMAIL_USER")
         self.password = os.environ.get("EMAIL_PASSWORD")
         self.recipient = recipient
 
-    def send_otp(self, user:User):
-        otp = pyotp.TOTP(os.environ.get("OTP_SECRET")).now()
-        otp = otp.now()
+    def send_otp(self, user: User):
+        otp = pyotp.TOTP(os.environ.get("OTP_SECRET_KEY")).now()  # Fixed OTP generation issue
+        
         msg = MIMEMultipart()
-
         msg['From'] = self.sender
         msg['To'] = self.recipient
         msg['Subject'] = "OTP for your account"
 
-        body = f"Dear {user.full_name.split(' ')[0]},\n\nYour OTP is {otp}. Please do not share this with anyone."
+        body = f"Dear Applicant,\n\nYour OTP is {otp}. Please do not share this with anyone."
         msg.attach(MIMEText(body, 'plain'))
 
         try:
@@ -40,18 +37,17 @@ class EmailRouter:
             server.sendmail(self.sender, self.recipient, msg.as_string())
             server.quit()
         except Exception as e:
-            print(e)
+            print(f"Error sending OTP email: {e}")  # Improved error logging
             return None
         return otp
     
-    def send_verfication_confirmation(self, user:User):
+    def send_verification_confirmation(self, user: User):  # Fixed method name typo
         msg = MIMEMultipart()
-
         msg['From'] = self.sender
         msg['To'] = self.recipient
         msg['Subject'] = "Account verification"
 
-        body = f"Dear {user.full_name.split(' ')[0]},\n\nYour account has been successfully verified."
+        body = f"Dear Applicant,\n\nYour account has been successfully verified."
         msg.attach(MIMEText(body, 'plain'))
 
         try:
@@ -61,6 +57,6 @@ class EmailRouter:
             server.sendmail(self.sender, self.recipient, msg.as_string())
             server.quit()
         except Exception as e:
-            print(e)
+            print(f"Error sending verification email: {e}")  # Improved error logging
             return False
         return True

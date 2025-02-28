@@ -1,0 +1,15 @@
+## TODO
+- [x] Making the Front-end Homepage
+- [x] Making the Front-end Sign in/up pages
+- [ ] Making the Front-end Dashboard for users Onboarding and Tracing accounts
+- [ ] Making the onboarding stages components
+    - [ ] Uploading Proof of identity (IDs or passport + live video/images of the user)
+    - [ ] Uploading proof of income
+    - [ ] Address validation
+    - [ ] Phone number validation (pesudo we don't have money for this)
+    - [ ] Email verification (using random tokens generation)
+- [ ] Making the Front-end of the OAuth authorization route
+- [ ] Making the backend Logic for files uploading and storing for later processing
+- [x] Making the backend Logic for authentication (including OAuth using Google)
+- [ ] Making the backend Logic for OAuth authorization for B2B businesse
+- [ ] Unittesting and integrations of the model

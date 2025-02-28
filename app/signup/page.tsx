@@ -5,11 +5,32 @@ const LoginPage: React.FC = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
+    const [error, setError] = useState('');
 
     const handleLogin = (event: React.FormEvent) => {
         event.preventDefault();
-        console.log('Email:', email);
-        console.log('Password:', password);
+        if (!password || !email || !confirmPassword) {
+            setError('Please fill in all fields');
+            return;
+        }
+        if (password !== confirmPassword) {
+            setError('Passwords do not match');
+            return;
+        }
+        fetch('http://localhost:5000/api/v1/auth/register', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ email, password, 'confirm-password': confirmPassword })
+        }).then(async (res) => {
+            const data = await res.json();
+            if (!res.ok) {
+                setError(data.message);
+                return;
+            }
+            window.location.href = '/login';
+        })
     };
 
     return (
@@ -64,6 +85,7 @@ const LoginPage: React.FC = () => {
             onClick={() => window.location.href = '/login'}
             >Sign in</button>
         </div>
+        {error && <p className='text-red-500 mt-5'>{error}</p>}
         </div>
     );
 };
