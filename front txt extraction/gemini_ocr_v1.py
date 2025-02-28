@@ -52,26 +52,22 @@ class BackIDExtractor:
             data = {"raw_extraction": cleaned_text}
         return data
 
-    def run(self):
-        folder_path = "./dataset1"
+    def run(self, image_path: str):
         results = []
-        for filename in os.listdir(folder_path):
-            if filename.lower().endswith((".jpg", ".jpeg", ".png")):
-                image_path = os.path.join(folder_path, filename)
-                print(f"Processing {filename}...")  # Progress update
-                raw_output = self.extract_text_from_image(image_path)
-                parsed_data = self.parse_json_response(raw_output)
-                results.append({
-                    "image": filename,
-                    "extracted_info": parsed_data
-                })
+        print(f"Processing {os.path.basename(image_path)}...")
+        raw_output = self.extract_text_from_image(image_path)
+        parsed_data = self.parse_json_response(raw_output)
+        results.append({
+            "image": os.path.basename(image_path),
+            "extracted_info": parsed_data
+        })
         with open("extracted_back_text.json", "w", encoding="utf-8") as json_file:
             json.dump(results, json_file, indent=4, ensure_ascii=False)
         print("All images processed successfully!")
 
 def main():
     extractor = BackIDExtractor()
-    extractor.run()
+    extractor.run("./dataset1/Screenshot 2025-02-27 022017.png")
 
 if __name__ == "__main__":
     main()

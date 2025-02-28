@@ -4,3 +4,5 @@ bank_states/*
 ai-boarding/*
 *.json
 *.txt
+text_extraction.py
+gemini_ocr_v1.py

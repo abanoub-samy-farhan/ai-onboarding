@@ -10,7 +10,6 @@ with open('GEMINI_API_KEY.txt', 'r') as key_file:
 
 genai.configure(api_key=os.environ['GEMINI_API_KEY'])
 
-# gemini model
 MODEL_NAME = "gemini-1.5-flash"
 model = genai.GenerativeModel(model_name=MODEL_NAME)
 
@@ -57,26 +56,22 @@ class BankStatementExtractor:
             data = {"raw_extraction": cleaned_text}
         return data
 
-    def run(self):
-        folder_path = "./bank_states"
+    def run(self, file_path: str):
         results = []
-        for filename in os.listdir(folder_path):
-            if filename.lower().endswith((".jpg", ".jpeg", ".png", ".pdf")):
-                file_path = os.path.join(folder_path, filename)
-                print(f"Processing {filename}...")
-                raw_output = self.extract_text_from_file(file_path)
-                parsed_data = self.parse_json_response(raw_output)
-                results.append({
-                    "file": filename,
-                    "extracted_info": parsed_data
-                })
+        print(f"Processing {os.path.basename(file_path)}...")
+        raw_output = self.extract_text_from_file(file_path)
+        parsed_data = self.parse_json_response(raw_output)
+        results.append({
+            "file": os.path.basename(file_path),
+            "extracted_info": parsed_data
+        })
         with open("extracted_bank_text.json", "w", encoding="utf-8") as json_file:
             json.dump(results, json_file, indent=4, ensure_ascii=False)
-        print("All files processed successfully!")
+        print("File processed successfully!")
 
 def main():
     extractor = BankStatementExtractor()
-    extractor.run()
+    extractor.run("./bank_states/your_statement.pdf")
 
 if __name__ == "__main__":
     main()
